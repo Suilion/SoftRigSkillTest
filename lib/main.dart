@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'homePage.dart';
 import 'constants.dart';
-import 'viewPhonebook.dart';
-import 'editPhonebook.dart';
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:oauth_webauth/oauth_webauth.dart';
 import 'package:http/http.dart' as http;
@@ -114,6 +112,15 @@ class _MyHomePageState extends State<MyHomePage> {
               Text(
                 apiResponse,
               ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                },
+                child: const Text('Go to App'),
+              ),
             ],
           ),
         ),
@@ -150,6 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
             isLoading = false;
             setState(() {
               token = credentials.accessToken;
+              UserCredentials.Token = token;
               authResponse = 'Login success!';
             });
           },
@@ -175,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void goApiCall() async {
     try {
       final response = await http.get(
-        Uri.parse('https://test-api.softrig.com/api/biz/contacts?expand=Info,Info.InvoiceAddress,Info.DefaultPhone,Info.DefaultEmail,Info.DefaultAddress&hateoas=false'),
+        Uri.parse('https://test-api.softrig.com/api/biz/customers'),
         headers: {
           HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
           HttpHeaders.authorizationHeader: 'Bearer $token',
@@ -211,6 +219,7 @@ class _MyHomePageState extends State<MyHomePage> {
         final responseJson = jsonDecode(response.body);
         setState(() {
           apiResponse = responseJson.toString();
+          debugPrint(apiResponse, wrapWidth: 1024);
         });
       }
     } catch (error) {
