@@ -3,68 +3,221 @@ import 'constants.dart';
 import 'viewPhonebook.dart';
 import 'editPhonebook.dart';
 
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:oauth_webauth/oauth_webauth.dart';
+import 'package:http/http.dart' as http;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await OAuthWebAuth.instance.init();
   runApp(const MyApp());
 }
 
+
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Demo',
+      title: 'Unimicro template',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: ColorConstants.DarkBlue),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Phonebook'),
+      home: const MyHomePage(title: 'Unimicro Flutter Template'),
     );
   }
+
 }
 
+
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
+
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+
 class _MyHomePageState extends State<MyHomePage> {
+  bool isLoading = OAuthWebAuth.instance.restoreCodeVerifier() != null;
+
+  // LOGIN RELATED INFORMATION
+  static const String authorizationEndpointUrl = String.fromEnvironment('AUTHORIZATION_ENDPOINT_URL', defaultValue: 'https://test-login.softrig.com/connect/authorize');
+  static const String tokenEndpointUrl = String.fromEnvironment('TOKEN_ENDPOINT_URL', defaultValue: 'https://test-login.softrig.com/connect/token');
+  static const String clientId = String.fromEnvironment('CLIENT_ID', defaultValue: '3c09b5dc-20d2-49ca-8750-fde58daf49e9');
+  static const String companyKey = String.fromEnvironment('COMPANY_KEY', defaultValue: '2767e3e2-f432-459a-a3a1-ff466f327484');
+  static const String redirectUrl = String.fromEnvironment('REDIRECT_URL', defaultValue: 'com.example.unimicroflutter://callback2');
+  final List<String> scopes = const String.fromEnvironment('SCOPES', defaultValue: 'AppFramework Administrator Sales.Admin Sales.Manager openid profile offline_access').split(' ');
+
+
+  Locale? contentLocale;
+  String authResponse = 'Authorization data will be shown here';
+  String token = '';
+  String apiResponse = 'API data will be shown here';
+
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(
+        const Duration(milliseconds: 300),
+            () {
+          if (OAuthWebAuth.instance.restoreCodeVerifier() != null) {
+            login();
+          }
+        },
+      );
+    });
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            IconButton(
-              icon: Image.asset("lib/resources/BookClosed.png"),
-              iconSize: 500,
-              onPressed: () {
-                Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ViewPhonebook()),
-              );
-              },
-            ),
-            Text('View Phonebook'),
-            IconButton(
-              icon: Image.asset("lib/resources/BookEdit.png"),
-              iconSize: 500,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EditPhonebook()),
-                );
-              },
-            ),
-            Text('Edit Phonebook'),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              if (isLoading) const CircularProgressIndicator(),
+              ElevatedButton(
+                onPressed: () {
+                  login();
+                },
+                style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.green)),
+                child: const Text('Login'),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                authResponse,
+              ),
+              const SizedBox(height: 4),
+              ElevatedButton(
+                onPressed: () {
+                  goApiCall();
+                },
+                child: const Text('API Call'),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                apiResponse,
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+
+
+  void login() {
+    OAuthWebScreen.start(
+      context: context,
+      configuration: OAuthConfiguration(
+          authorizationEndpointUrl: authorizationEndpointUrl,
+          tokenEndpointUrl: tokenEndpointUrl,
+          clientId: clientId,
+          redirectUrl: redirectUrl,
+          scopes: scopes,
+          promptValues: const ['login'],
+          loginHint: 'susanneskjoldedvardsen@gmail.com',
+          onCertificateValidate: (certificate) {
+            return true;
+          },
+          textLocales: {
+            BaseConfiguration.backButtonTooltipKey: 'Back',
+            BaseConfiguration.forwardButtonTooltipKey: 'Forward',
+            BaseConfiguration.reloadButtonTooltipKey: 'Reload',
+            BaseConfiguration.clearCacheButtonTooltipKey: 'Clear Cache',
+            BaseConfiguration.closeButtonTooltipKey: 'Close',
+            BaseConfiguration.clearCacheWarningMessageKey: 'Are you sure you want to clear the cache?',
+          },
+          contentLocale: contentLocale,
+          onSuccessAuth: (credentials) {
+            isLoading = false;
+            setState(() {
+              token = credentials.accessToken;
+              authResponse = 'Login success!';
+            });
+          },
+
+          onError: (error) {
+            isLoading = false;
+            setState(() {
+              authResponse = error.toString();
+            });
+          },
+
+          onCancel: () {
+            isLoading = false;
+            setState(() {
+              authResponse = 'User cancelled authentication';
+            });
+          }),
+    );
+  }
+
+
+
+  void goApiCall() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://test-api.softrig.com/api/biz/contacts?expand=Info,Info.InvoiceAddress,Info.DefaultPhone,Info.DefaultEmail,Info.DefaultAddress&hateoas=false'),
+        headers: {
+          HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
+          HttpHeaders.authorizationHeader: 'Bearer $token',
+          "CompanyKey": companyKey,
+          HttpHeaders.accessControlAllowOriginHeader: '*',
+        },
+      );
+
+
+      // Check for error status codes
+      if (response.statusCode == 401) {
+        // Handle unauthorized error
+        // For simplicity, we're just setting the state. You might want to show an alert or navigate the user.
+        setState(() {
+          apiResponse = "Error 401: Unauthorized. Check your credentials.";
+        });
+
+      } else if (response.statusCode == 403) {
+        // Handle forbidden error
+        setState(() {
+          apiResponse = "Error 403: Forbidden. You don't have permission.";
+        });
+
+      } else if (response.statusCode != 200) {
+        // Handle other status codes
+        setState(() {
+          apiResponse = "Error ${response.statusCode}: ${response.reasonPhrase}";
+        });
+
+      } else {
+        // If everything's fine, parse and use the response
+        // Tip: Please read the https://developer.softrig.com/wiki/how-to/contacts
+        final responseJson = jsonDecode(response.body);
+        setState(() {
+          apiResponse = responseJson.toString();
+        });
+      }
+    } catch (error) {
+      // Handle other errors like network issues, JSON decoding, etc.
+      setState(() {
+        apiResponse = "An error occurred: $error";
+      });
+    }
   }
 }
