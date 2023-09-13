@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
+import 'editUser.dart';
+import 'constants.dart';
+import 'customer.dart';
 import 'viewPhonebook.dart';
 
-class EditPhonebook extends StatelessWidget {
-  const EditPhonebook({super.key});
+class EditPhonebook extends StatefulWidget {
+  const EditPhonebook({Key? key}) : super(key: key);
+
+  @override
+  _EditPhonebookState createState() => _EditPhonebookState();
+}
+
+class _EditPhonebookState extends State<EditPhonebook> {
+  final myController = TextEditingController();
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    myController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +56,74 @@ class EditPhonebook extends StatelessWidget {
                   minimumSize: Size.fromHeight(40), // fromHeight use double.infinity as width and 40 is the height
                 ),
                 onPressed: () {
-                  //Create function to search for specific user
-                  //Go to edit
-                  //Connect edit from viewPhonebook as well to this page
-                  //Upload edit to the api
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        scrollable: true,
+                        title: Text('Enter name of User you want to edit'),
+                        content: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Form(
+                            child: Column(
+                              children: <Widget>[
+                                TextFormField(
+                                  controller: myController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Name',
+                                    icon: Icon(Icons.person),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: ColorConstants.DarkBlue,
+                              padding: const EdgeInsets.all(16.0),
+                              textStyle: const TextStyle(fontSize: 20),
+                            ),
+                            onPressed: () {
+                              //search function here
+                              setState(() {
+                                var index = -1;
+
+                                for (int i = 0; i < customers.length; i++) {
+                                  if (customers[i]["Name"] == myController.text) {
+                                    index = i;
+                                  }
+                                }
+
+                                if (index != -1) {
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditUser(
+                                        index: index,
+                                      ),
+                                    ),
+                                  );
+
+                                } else {
+                                  final snackBar = SnackBar(
+                                    content: const Text('Could not find user'),
+                                  );
+
+                                  // Find the ScaffoldMessenger in the widget tree
+                                  // and use it to show a SnackBar.
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                  Navigator.pop(context);
+                                }
+                              });
+                            },
+                            child: const Text('Search'),
+                          ),
+                        ],
+                      );
+                    });
                 },
                 icon: Image.asset("lib/resources/EditUser.png",
                   height: 100,

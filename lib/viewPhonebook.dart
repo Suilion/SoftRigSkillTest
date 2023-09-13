@@ -100,7 +100,6 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          print(SortableCustomerList);
                                           SortableCustomerList.sort((a, b) => a['Name'].compareTo(b['Name']));
                                           SortableCustomerList.reversed;
                                         });
