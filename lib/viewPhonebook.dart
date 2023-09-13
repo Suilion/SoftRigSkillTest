@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'customer.dart';
 import 'editPhonebook.dart';
+import 'editUser.dart';
 import 'constants.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -135,6 +136,130 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
       ),
     );
   }
+
+  //This widget is what the list element will look like contracted and expanded
+  Widget _buildExpandableTile(item, context) {
+    return ExpansionTile(
+      title: Text(
+        item['Name'],
+      ),
+      children: <Widget>[
+        ListTile(
+          title: Text(
+            (item['Adress'] + '\n' +  item['Email'] + '\n' +  item['Comment']),
+            style: TextStyle(fontWeight: FontWeight.w700),
+
+          ),
+          subtitle: Column(
+            children: <Widget>[
+              Center(
+                child: Row(
+                  children: [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: ColorConstants.DarkBlue,
+                        padding: const EdgeInsets.all(16.0),
+                        textStyle: const TextStyle(fontSize: 20),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditUser(
+                              index: customers.indexOf(item),
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Edit User'),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: ColorConstants.AttentionRed,
+                        padding: const EdgeInsets.all(16.0),
+                        textStyle: const TextStyle(fontSize: 20),
+                      ),
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                scrollable: true,
+                                title: Text('Delete User?'),
+                                content: Text('Are you sure you want to delete ' + item['Name'] + ' from the Phonebook?'),
+                                actions: [
+                                  Row(
+                                    children: [
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: ColorConstants.DarkBlue,
+                                          padding: const EdgeInsets.all(16.0),
+                                          textStyle: const TextStyle(fontSize: 20),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('No'),
+                                      ),
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: ColorConstants.AttentionRed,
+                                          padding: const EdgeInsets.all(16.0),
+                                          textStyle: const TextStyle(fontSize: 20),
+                                        ),
+                                        onPressed: () {
+                                          bool DeletedUser = false;
+
+                                          //NB API Create delete user functionality here
+                                          try {
+                                            setState(() {
+
+                                              //Delete user from local list
+                                              final index = customers.indexOf(item);
+                                              customers.removeAt(index);
+
+                                              //API Run check if it worked.
+                                              DeletedUser = true;
+
+                                              //Display result to the user
+                                            });
+                                          } catch (e, s) {
+                                            print(s);
+                                          }
+
+                                          if(DeletedUser) {
+                                            final snackBar = SnackBar(
+                                              content: const Text('User was deleted'),
+                                            );
+
+                                            // Find the ScaffoldMessenger in the widget tree
+                                            // and use it to show a SnackBar.
+                                            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                          }
+
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('Yes'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            });
+                      },
+                      child: const Text('Delete User'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+
+  }
   void goApiFetch() async {
     try {
       final response = await http.get(
@@ -187,92 +312,5 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
 
 
 
-//This widget is what the list element will look like contracted and expanded
-Widget _buildExpandableTile(item, context) {
-  return ExpansionTile(
-    title: Text(
-      item['Name'],
-    ),
-    children: <Widget>[
-      ListTile(
-        title: Text(
-          (item['Adress'] + '\n' +  item['Email'] + '\n' +  item['Comment']),
-          style: TextStyle(fontWeight: FontWeight.w700),
 
-        ),
-        subtitle: Column(
-          children: <Widget>[
-            Center(
-              child: Row(
-                children: [
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: ColorConstants.DarkBlue,
-                      padding: const EdgeInsets.all(16.0),
-                      textStyle: const TextStyle(fontSize: 20),
-                    ),
-                    onPressed: () {
-                      //NB add connection when that page is created
-                    },
-                    child: const Text('Edit User'),
-                  ),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: ColorConstants.AttentionRed,
-                      padding: const EdgeInsets.all(16.0),
-                      textStyle: const TextStyle(fontSize: 20),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              scrollable: true,
-                              title: Text('Delete User?'),
-                              content: const Text("Are you sure you want to delete this user from the Phonebook?"),
-                              actions: [
-                                Row(
-                                  children: [
-                                    TextButton(
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: ColorConstants.DarkBlue,
-                                        padding: const EdgeInsets.all(16.0),
-                                        textStyle: const TextStyle(fontSize: 20),
-                                      ),
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('No'),
-                                    ),
-                                    TextButton(
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: ColorConstants.AttentionRed,
-                                        padding: const EdgeInsets.all(16.0),
-                                        textStyle: const TextStyle(fontSize: 20),
-                                      ),
-                                      onPressed: () {
-                                        //NB Create delete user functionality here
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('Yes'),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            );
-                          });
-                    },
-                    child: const Text('Delete User'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
-  );
-
-
-}
 

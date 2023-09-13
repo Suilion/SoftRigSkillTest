@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'contact.dart';
 import 'homePage.dart';
 import 'constants.dart';
 
@@ -179,11 +180,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
-
   void goApiCall() async {
     try {
       final response = await http.get(
-        Uri.parse('https://test-api.softrig.com/api/biz/customers'),
+        Uri.parse('https://test-api.softrig.com/api/biz/contacts?expand=Info,Info.InvoiceAddress,Info.DefaultPhone,Info.DefaultEmail,Info.DefaultAddress&hateoas=false&top=10'),
         headers: {
           HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
           HttpHeaders.authorizationHeader: 'Bearer $token',
@@ -191,7 +191,6 @@ class _MyHomePageState extends State<MyHomePage> {
           HttpHeaders.accessControlAllowOriginHeader: '*',
         },
       );
-
 
       // Check for error status codes
       if (response.statusCode == 401) {
@@ -214,13 +213,21 @@ class _MyHomePageState extends State<MyHomePage> {
         });
 
       } else {
-        // If everything's fine, parse and use the response
-        // Tip: Please read the https://developer.softrig.com/wiki/how-to/contacts
+        setState(() {
+          Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+          //This generates an error
+        });
+
+
+        /*List jsonResponse = json.decode(response.body);
+          jsonResponse.map((job) => ApiResponse.fromJson(job)).toList();
         final responseJson = jsonDecode(response.body);
         setState(() {
           apiResponse = responseJson.toString();
           debugPrint(apiResponse, wrapWidth: 1024);
         });
+         */
       }
     } catch (error) {
       // Handle other errors like network issues, JSON decoding, etc.
