@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'customer.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'constants.dart';
+import 'response.dart';
 
 class AddUser extends StatefulWidget {
   const AddUser({Key? key}) : super(key: key);
@@ -10,11 +13,15 @@ class AddUser extends StatefulWidget {
 }
 
 class _AddUserState extends State<AddUser> {
-  final myController = TextEditingController();
+  final myControllerRole = TextEditingController();
+  final myControllerComment = TextEditingController();
+
+
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-    myController.dispose();
+    myControllerRole.dispose();
+    myControllerComment.dispose();
     super.dispose();
   }
 
@@ -35,25 +42,14 @@ class _AddUserState extends State<AddUser> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               TextFormField(
-                controller: myController,
+                controller: myControllerRole,
                 decoration:  InputDecoration(
                   icon: const Icon(Icons.person),
                   labelText: "Name",
                 ),
               ),
               TextFormField(
-                decoration: InputDecoration(
-                  icon: const Icon(Icons.house),
-                  labelText: 'Adress',
-                ),
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  icon: const Icon(Icons.mail),
-                  labelText: 'Email',
-                ),
-              ),
-              TextFormField(
+                controller: myControllerComment,
                 decoration: InputDecoration(
                   icon: const Icon(Icons.comment),
                   labelText: 'Comment',
@@ -69,8 +65,9 @@ class _AddUserState extends State<AddUser> {
                       textStyle: const TextStyle(fontSize: 20),
                     ),
                     onPressed: () {
-                      print(myController.text);
-                      //Update variables to the user
+                      setState(() {
+                        AddUser( myControllerRole.text, myControllerComment.text);
+                      });
                       Navigator.pop(context);
                     },
                     child: const Text('Submit User'),
@@ -83,5 +80,40 @@ class _AddUserState extends State<AddUser> {
 
       ),
     );
+  }
+  void AddUser(String role, String comment) async {
+    CustomModel user = CustomModel();
+    String token = UserCredentials.Token;
+
+    if (comment != null) {
+      user.comment = comment;
+    }
+    if (role != null) {
+      user.role = role;
+    }
+    try {
+      final response = await http.post(
+
+        Uri.parse('https://test-api.softrig.com/api/biz/contacts'),
+        headers: {
+          HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
+          HttpHeaders.authorizationHeader: 'Bearer $token',
+          "CompanyKey": UserCredentials.companyKey,
+          HttpHeaders.accessControlAllowOriginHeader: '*',
+        },
+        body: jsonEncode(user.toJson()), // Convert CustomModel to JSON
+      );
+
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to upload user.');
+      }
+    } catch (e) {
+      throw();
+    }
   }
 }

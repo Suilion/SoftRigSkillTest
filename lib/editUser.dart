@@ -117,7 +117,7 @@ void updateUser(CustomModel user, String role, String comment) async {
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
-      throw Exception('Failed to update album.');
+      throw Exception('Failed to update user.');
     }
   } catch (e){
     throw();
