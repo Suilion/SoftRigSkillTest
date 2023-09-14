@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:skill_test/homePage.dart';
+import 'package:skill_test/viewPhonebook.dart';
 import 'constants.dart';
 import 'response.dart';
 
@@ -32,7 +34,7 @@ class _AddUserState extends State<AddUser> {
     final _formKey = GlobalKey<FormState>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit User'),
+        title: const Text('Add User'),
       ),
       body: Center(
         // Only allowed to edit name, email, adress and comment
@@ -68,7 +70,10 @@ class _AddUserState extends State<AddUser> {
                       setState(() {
                         AddUser( myControllerRole.text, myControllerComment.text);
                       });
-                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HomePage()),
+                      );
                     },
                     child: const Text('Submit User'),
                   ),

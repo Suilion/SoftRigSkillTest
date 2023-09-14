@@ -49,6 +49,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Phonebook'),
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: Column(
@@ -72,7 +73,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                 icon: Image.asset("lib/resources/AddUser.png",
                   height: 100,
                   width: 100,),
-                label: Text('Add a new person'),
+                label: Text(' Add a new person'),
               ),
             ),
             Padding(
@@ -154,7 +155,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                 icon: Image.asset("lib/resources/EditUser.png",
                   height: 100,
                   width: 100,),
-                label: Text('Edit an existing person'),
+                label: Text('Edit existing person'),
               ),
             ),
             Padding(
@@ -169,7 +170,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                       builder: (BuildContext context) {
                         return AlertDialog(
                           scrollable: true,
-                          title: Text('Enter name of User you want to delete'),
+                          title: Text('Enter role of the User you want to delete'),
                           content: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Form(
@@ -178,7 +179,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                   TextFormField(
                                     controller: myController,
                                     decoration: InputDecoration(
-                                      labelText: 'Name',
+                                      labelText: 'Role',
                                       icon: Icon(Icons.person),
                                     ),
                                   ),
@@ -204,8 +205,70 @@ class _EditPhonebookState extends State<EditPhonebook> {
 
                                 if (index != -1) {
                                   Navigator.pop(context);
-                                  //delete user
 
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          scrollable: true,
+                                          title: Text('Delete User?'),
+                                          content: Text('Are you sure you want to delete ' + myController.text + ' from the Phonebook?'),
+                                          actions: [
+                                            Row(
+                                              children: [
+                                                TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    foregroundColor: ColorConstants.DarkBlue,
+                                                    padding: const EdgeInsets.all(16.0),
+                                                    textStyle: const TextStyle(fontSize: 20),
+                                                  ),
+                                                  onPressed: () {
+                                                    deleteUser = false;
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('No'),
+                                                ),
+                                                TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    foregroundColor: ColorConstants.AttentionRed,
+                                                    padding: const EdgeInsets.all(16.0),
+                                                    textStyle: const TextStyle(fontSize: 20),
+                                                  ),
+                                                  onPressed: () {
+                                                    bool userWasDeleted = false;
+
+                                                    try {
+                                                      setState(() {
+                                                        for(int i = 0; i < customModels.length; i++){
+                                                          if (customModels[i].role == myController.text) {
+                                                            DeleteUser(customModels[i]);
+                                                            userWasDeleted = true;
+                                                            break;
+                                                          }
+                                                        }
+                                                      });
+                                                    } catch (e, s) {
+                                                      print(s);
+                                                    }
+
+                                                    if(userWasDeleted) {
+                                                      final snackBar = SnackBar(
+                                                        content: const Text('User was deleted'),
+                                                      );
+
+                                                      // Find the ScaffoldMessenger in the widget tree
+                                                      // and use it to show a SnackBar.
+                                                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                                    }
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('Yes'),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        );
+                                      });
                                 } else {
                                   final snackBar = SnackBar(
                                     content: const Text('Could not find user'),
@@ -222,91 +285,21 @@ class _EditPhonebookState extends State<EditPhonebook> {
                           ],
                         );
                       });
-                  if(deleteUser) {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          scrollable: true,
-                          title: Text('Delete User?'),
-                          content: Text('Are you sure you want to delete ' + myController.text + ' from the Phonebook?'),
-                          actions: [
-                            Row(
-                              children: [
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: ColorConstants.DarkBlue,
-                                    padding: const EdgeInsets.all(16.0),
-                                    textStyle: const TextStyle(fontSize: 20),
-                                  ),
-                                  onPressed: () {
-                                    deleteUser = false;
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('No'),
-                                ),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: ColorConstants.AttentionRed,
-                                    padding: const EdgeInsets.all(16.0),
-                                    textStyle: const TextStyle(fontSize: 20),
-                                  ),
-                                  onPressed: () {
-                                    bool DeletedUser = false;
 
-                                    //NB API Create delete user functionality here
-                                    try {
-                                      setState(() {
-                                        var index = -1;
 
-                                        for (int i = 0; i < customers.length; i++) {
-                                          if (customers[i]["Name"] == myController.text) {
-                                            index = i;
-                                          }
-                                        }
-                                        customers.removeAt(index);
 
-                                        //API Run check if it worked.
-                                        DeletedUser = true;
-
-                                        //Display result to the user
-                                      });
-                                    } catch (e, s) {
-                                      print(s);
-                                    }
-
-                                    if(DeletedUser) {
-                                      final snackBar = SnackBar(
-                                        content: const Text('User was deleted'),
-                                      );
-
-                                      // Find the ScaffoldMessenger in the widget tree
-                                      // and use it to show a SnackBar.
-                                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                                    }
-                                    deleteUser = false;
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('Yes'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      });
-                  }
                 },
                 icon: Image.asset("lib/resources/DeleteUser.png",
                   height: 100,
                   width: 100,),
-                label: Text('Delete a person'),
+                label: Text('    Delete a person'),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(40), // fromHeight use double.infinity as width and 40 is the height
+                  minimumSize: Size.fromHeight(40),
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -373,6 +366,35 @@ class _EditPhonebookState extends State<EditPhonebook> {
       setState(() {
         apiResponse = "An error occurred: $error";
       });
+    }
+  }
+
+  void DeleteUser(CustomModel user) async {
+    String token = UserCredentials.Token;
+    int? userId = user.id;
+    try {
+      final response = await http.delete(
+
+        Uri.parse('https://test-api.softrig.com/api/biz/contacts/$userId'),
+        headers: {
+          HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
+          HttpHeaders.authorizationHeader: 'Bearer $token',
+          "CompanyKey": UserCredentials.companyKey,
+          HttpHeaders.accessControlAllowOriginHeader: '*',
+        },
+        body: jsonEncode(user.toJson()), // Convert CustomModel to JSON
+      );
+
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to update user.');
+      }
+    } catch (e) {
+      throw();
     }
   }
 }

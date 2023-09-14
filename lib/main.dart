@@ -110,16 +110,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ElevatedButton(
                 onPressed: () {
                   goApiCall();
-                },
-                child: const Text('API Call'),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                apiResponse,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  goApiCall();
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const HomePage()),

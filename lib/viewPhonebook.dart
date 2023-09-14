@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:skill_test/response.dart';
-import 'customer.dart';
 import 'editPhonebook.dart';
 import 'editUser.dart';
 import 'constants.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/services.dart';
-import 'package:oauth_webauth/oauth_webauth.dart';
 import 'package:http/http.dart' as http;
 
 class ViewPhonebook extends StatefulWidget {
@@ -30,7 +27,6 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
     //Fetching data from api
     if(!hasLoaded){
       goApiFetch();
-      print("fetched data");
       if (!apiResponse.contains("Error")){
         setState(() {
           hasLoaded = true;
@@ -38,10 +34,10 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
       }
     }
 
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('View Phonebook'),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
@@ -196,31 +192,29 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                                       textStyle: const TextStyle(fontSize: 20),
                                                     ),
                                                     onPressed: () {
-                                                      bool DeletedUser = false;
 
-                                                      //NB API Create delete user functionality here
+                                                      bool userWasDeleted = false;
                                                       try {
                                                         setState(() {
-
-                                                          //Delete user from local list
-                                                          //NB
-
-                                                          //API Run check if it worked.
-                                                          DeletedUser = true;
-
-                                                          //Display result to the user
+                                                          for(int i = 0; i < customModels.length; i++){
+                                                            if (customModels[i].role == customModels[index].role) {
+                                                              DeleteUser(customModels[i]);
+                                                              userWasDeleted = true;
+                                                              break;
+                                                            }
+                                                          }
                                                         });
                                                       } catch (e, s) {
                                                         print(s);
                                                       }
 
-                                                      if(DeletedUser) {
-                                                        final snackBar = SnackBar(
-                                                          content: const Text('User was deleted'),
+                                                      if(userWasDeleted) {
+                                                        //delete local instance
+                                                        customModels.removeAt(index);
+                                                        const snackBar = SnackBar(
+                                                          content: Text('User was deleted'),
                                                         );
 
-                                                        // Find the ScaffoldMessenger in the widget tree
-                                                        // and use it to show a SnackBar.
                                                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                                       }
 
@@ -299,6 +293,34 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
       setState(() {
         apiResponse = "An error occurred: $error";
       });
+    }
+  }
+  void DeleteUser(CustomModel user) async {
+    String token = UserCredentials.Token;
+    int? userId = user.id;
+    try {
+      final response = await http.delete(
+
+        Uri.parse('https://test-api.softrig.com/api/biz/contacts/$userId'),
+        headers: {
+          HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
+          HttpHeaders.authorizationHeader: 'Bearer $token',
+          "CompanyKey": UserCredentials.companyKey,
+          HttpHeaders.accessControlAllowOriginHeader: '*',
+        },
+        body: jsonEncode(user.toJson()), // Convert CustomModel to JSON
+      );
+
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to update user.');
+      }
+    } catch (e) {
+      throw();
     }
   }
 }

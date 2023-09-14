@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
+import 'package:skill_test/homePage.dart';
 import 'package:skill_test/response.dart';
 import 'constants.dart';
 import 'viewPhonebook.dart';
@@ -73,7 +74,7 @@ class _EditUserState extends State<EditUser> {
                       });
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ViewPhonebook()),
+                        MaterialPageRoute(builder: (context) => const HomePage()),
                       );
                     },
                     child: const Text('Submit Changes'),
@@ -92,10 +93,10 @@ class _EditUserState extends State<EditUser> {
 void updateUser(CustomModel user, String role, String comment) async {
   String token = UserCredentials.Token;
   int? userId = user.id;
-  if(comment != null){
+  if(!comment.isEmpty){
     user.comment = comment;
   }
-  if(role != null){
+  if(!role.isEmpty){
     user.role = role;
   }
   try{
