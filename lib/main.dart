@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:skill_test/response.dart';
 import 'contact.dart';
 import 'homePage.dart';
 import 'constants.dart';
+import 'response.dart';
+
 
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:oauth_webauth/oauth_webauth.dart';
 import 'package:http/http.dart' as http;
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String authResponse = 'Authorization data will be shown here';
   String token = '';
   String apiResponse = 'API data will be shown here';
+  CustomModel defaultModel = CustomModel();
+  List <CustomModel> customModels = [];
 
 
   @override
@@ -75,7 +81,6 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     });
   }
-
 
 
   @override
@@ -115,6 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               ElevatedButton(
                 onPressed: () {
+                  goApiCall();
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const HomePage()),
@@ -128,7 +134,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
 
 
   void login() {
@@ -183,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void goApiCall() async {
     try {
       final response = await http.get(
-        Uri.parse('https://test-api.softrig.com/api/biz/contacts?expand=Info,Info.InvoiceAddress,Info.DefaultPhone,Info.DefaultEmail,Info.DefaultAddress&hateoas=false&top=10'),
+        Uri.parse('https://test-api.softrig.com/api/biz/contacts'),
         headers: {
           HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
           HttpHeaders.authorizationHeader: 'Bearer $token',
@@ -198,41 +203,38 @@ class _MyHomePageState extends State<MyHomePage> {
         // For simplicity, we're just setting the state. You might want to show an alert or navigate the user.
         setState(() {
           apiResponse = "Error 401: Unauthorized. Check your credentials.";
+          throw Exception('Failed to load data');
         });
 
       } else if (response.statusCode == 403) {
         // Handle forbidden error
         setState(() {
           apiResponse = "Error 403: Forbidden. You don't have permission.";
+          throw Exception('Failed to load data');
         });
 
       } else if (response.statusCode != 200) {
         // Handle other status codes
         setState(() {
           apiResponse = "Error ${response.statusCode}: ${response.reasonPhrase}";
+          throw Exception('Failed to load data');
         });
 
       } else {
         setState(() {
-          Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-
-          //This generates an error
+          List responseJson = jsonDecode(response.body);
+          for (int i = 0; i < responseJson.length; i++){
+            defaultModel = CustomModel.fromJson(responseJson[i]);
+            customModels.add(defaultModel);
+          }
+          apiResponse = "Data fetched";
         });
-
-
-        /*List jsonResponse = json.decode(response.body);
-          jsonResponse.map((job) => ApiResponse.fromJson(job)).toList();
-        final responseJson = jsonDecode(response.body);
-        setState(() {
-          apiResponse = responseJson.toString();
-          debugPrint(apiResponse, wrapWidth: 1024);
-        });
-         */
       }
     } catch (error) {
       // Handle other errors like network issues, JSON decoding, etc.
       setState(() {
         apiResponse = "An error occurred: $error";
+        throw Exception('Failed to load data');
       });
     }
   }
