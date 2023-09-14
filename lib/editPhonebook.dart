@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter/material.dart';
+import 'package:skill_test/response.dart';
 import 'editUser.dart';
 import 'constants.dart';
 import 'customer.dart';
@@ -13,6 +18,12 @@ class EditPhonebook extends StatefulWidget {
 }
 
 class _EditPhonebookState extends State<EditPhonebook> {
+  bool hasLoaded = false;
+  String apiResponse = 'API data will be shown here';
+  String token = UserCredentials.Token;
+  CustomModel defaultModel = CustomModel();
+  List <CustomModel> customModels = [];
+
   final myController = TextEditingController();
   bool deleteUser = false;
   @override
@@ -24,6 +35,17 @@ class _EditPhonebookState extends State<EditPhonebook> {
 
   @override
   Widget build(BuildContext context) {
+    //Fetching data from api
+    if(!hasLoaded){
+      goApiFetch();
+      print("fetched data");
+      if (!apiResponse.contains("Error")){
+        setState(() {
+          hasLoaded = true;
+        });
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Phonebook'),
@@ -65,7 +87,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                     builder: (BuildContext context) {
                       return AlertDialog(
                         scrollable: true,
-                        title: Text('Enter name of User you want to edit'),
+                        title: Text('Enter role of User you want to edit'),
                         content: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Form(
@@ -74,7 +96,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                 TextFormField(
                                   controller: myController,
                                   decoration: InputDecoration(
-                                    labelText: 'Name',
+                                    labelText: 'Role',
                                     icon: Icon(Icons.person),
                                   ),
                                 ),
@@ -94,19 +116,19 @@ class _EditPhonebookState extends State<EditPhonebook> {
                               setState(() {
                                 var index = -1;
 
-                                for (int i = 0; i < customers.length; i++) {
-                                  if (customers[i]["Name"] == myController.text) {
+                                for(int i = 0; i < customModels.length; i++){
+                                  if (customModels[i].role == myController.text) {
                                     index = i;
                                   }
                                 }
-/*
+
                                 if (index != -1) {
                                   Navigator.pop(context);
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => EditUser(
-                                        index: index,
+                                        user: customModels[index],
                                       ),
                                     ),
                                   );
@@ -120,7 +142,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                   // and use it to show a SnackBar.
                                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                   Navigator.pop(context);
-                                }*/
+                                }
                               });
                             },
                             child: const Text('Search'),
@@ -172,31 +194,28 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                 textStyle: const TextStyle(fontSize: 20),
                               ),
                               onPressed: () {
-                                //search function here
-                                setState(() {
-                                  var index = -1;
+                                var index = -1;
 
-                                  for (int i = 0; i < customers.length; i++) {
-                                    if (customers[i]["Name"] == myController.text) {
-                                      index = i;
-                                    }
+                                for(int i = 0; i < customModels.length; i++){
+                                  if (customModels[i].role == myController.text) {
+                                    index = i;
                                   }
+                                }
 
-                                  if (index == -1) {
-                                    deleteUser = false;
-                                    final snackBar = SnackBar(
-                                      content: const Text('Could not find user'),
-                                    );
+                                if (index != -1) {
+                                  Navigator.pop(context);
+                                  //delete user
 
-                                    // Find the ScaffoldMessenger in the widget tree
-                                    // and use it to show a SnackBar.
-                                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                                    Navigator.pop(context);
-                                  } else {
-                                    deleteUser = true;
-                                    Navigator.pop(context);
-                                  }
-                                });
+                                } else {
+                                  final snackBar = SnackBar(
+                                    content: const Text('Could not find user'),
+                                  );
+
+                                  // Find the ScaffoldMessenger in the widget tree
+                                  // and use it to show a SnackBar.
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                  Navigator.pop(context);
+                                }
                               },
                               child: const Text('Search'),
                             ),
@@ -305,5 +324,55 @@ class _EditPhonebookState extends State<EditPhonebook> {
         ),
       ),
     );
+  }
+  void goApiFetch() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://test-api.softrig.com/api/biz/contacts?expand=Info,Info.InvoiceAddress,Info.DefaultPhone,Info.DefaultEmail,Info.DefaultAddress&hateoas=false'),
+        headers: {
+          HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
+          HttpHeaders.authorizationHeader: 'Bearer $token',
+          "CompanyKey": UserCredentials.companyKey,
+          HttpHeaders.accessControlAllowOriginHeader: '*',
+        },
+      );
+
+
+      // Check for error status codes
+      if (response.statusCode == 401) {
+        // Handle unauthorized error
+        // For simplicity, we're just setting the state. You might want to show an alert or navigate the user.
+        setState(() {
+          apiResponse = "Error 401: Unauthorized. Check your credentials.";
+        });
+
+      } else if (response.statusCode == 403) {
+        // Handle forbidden error
+        setState(() {
+          apiResponse = "Error 403: Forbidden. You don't have permission.";
+        });
+
+      } else if (response.statusCode != 200) {
+        // Handle other status codes
+        setState(() {
+          apiResponse = "Error ${response.statusCode}: ${response.reasonPhrase}";
+        });
+
+      } else {
+        setState(() {
+          List responseJson = jsonDecode(response.body);
+          for (int i = 0; i < responseJson.length; i++){
+            defaultModel = CustomModel.fromJson(responseJson[i]);
+            customModels.add(defaultModel);
+          }
+          apiResponse = "Data fetched";
+        });
+      }
+    } catch (error) {
+      // Handle other errors like network issues, JSON decoding, etc.
+      setState(() {
+        apiResponse = "An error occurred: $error";
+      });
+    }
   }
 }

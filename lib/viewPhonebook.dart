@@ -19,7 +19,6 @@ class ViewPhonebook extends StatefulWidget {
 }
 
 class _ViewPhonebookState extends State<ViewPhonebook> {
-  List SortableCustomerList = customers;
   bool hasLoaded = false;
   String apiResponse = 'API data will be shown here';
   String token = UserCredentials.Token;
