@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:skill_test/response.dart';
 import 'homePage.dart';
 import 'constants.dart';
-import 'response.dart';
 
 
 import 'dart:convert';
@@ -18,7 +17,7 @@ void main() async {
   runApp(const MyApp());
 }
 
-
+//Note that this file was mostly written by uni micro to establish authentication with the api.
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -174,6 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
+  //This function was created by unimicro, and has served as a template for any api function later on in this project
   void goApiCall() async {
     try {
       final response = await http.get(
@@ -212,6 +212,8 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         setState(() {
           List responseJson = jsonDecode(response.body);
+
+          //iterate over the recieved list and insert the data in the model class
           for (int i = 0; i < responseJson.length; i++){
             defaultModel = CustomModel.fromJson(responseJson[i]);
             customModels.add(defaultModel);

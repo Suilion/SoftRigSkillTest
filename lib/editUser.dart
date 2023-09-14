@@ -23,7 +23,6 @@ class _EditUserState extends State<EditUser> {
 
   @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
     myControllerRole.dispose();
     myControllerComment.dispose();
     super.dispose();
@@ -31,15 +30,14 @@ class _EditUserState extends State<EditUser> {
 
   @override
   Widget build(BuildContext context) {
-
-
+    //need the key to fetch information from the form
     final _formKey = GlobalKey<FormState>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit User'),
       ),
       body: Center(
-        // Only allowed to edit role and comment.
+        // Only allowed to edit role and comment
         child: Form(
           key: _formKey,
           child: Column(
@@ -69,9 +67,11 @@ class _EditUserState extends State<EditUser> {
                       textStyle: const TextStyle(fontSize: 20),
                     ),
                     onPressed: () {
+                      //Updates the user in the api
                       setState(() {
                         updateUser(widget.user, myControllerRole.text, myControllerComment.text);
                       });
+                      //Return to front page
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const HomePage()),

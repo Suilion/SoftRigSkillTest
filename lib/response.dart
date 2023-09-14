@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+//This class contains all the information for the user that is fetched from the api
 class CustomModel {
   Map<String, dynamic> ?customValues;
   String ?role;

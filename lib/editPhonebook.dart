@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:skill_test/response.dart';
 import 'editUser.dart';
 import 'constants.dart';
-import 'customer.dart';
 import 'addUser.dart';
 import 'viewPhonebook.dart';
 
@@ -19,26 +18,26 @@ class EditPhonebook extends StatefulWidget {
 
 class _EditPhonebookState extends State<EditPhonebook> {
   bool hasLoaded = false;
+  bool deleteUser = false;
   String apiResponse = 'API data will be shown here';
   String token = UserCredentials.Token;
+
   CustomModel defaultModel = CustomModel();
   List <CustomModel> customModels = [];
 
   final myController = TextEditingController();
-  bool deleteUser = false;
+
   @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
     myController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    //Fetching data from api
+    //Fetching data from the api
     if(!hasLoaded){
       goApiFetch();
-      print("fetched data");
       if (!apiResponse.contains("Error")){
         setState(() {
           hasLoaded = true;
@@ -55,14 +54,14 @@ class _EditPhonebookState extends State<EditPhonebook> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.all(50), //apply padding to all four sides
+              padding: EdgeInsets.all(50),
               child: Text("I want to...", style: TextStyle(fontSize: 25),),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(40), // fromHeight use double.infinity as width and 40 is the height
+                  minimumSize: Size.fromHeight(40),
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -80,7 +79,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(40), // fromHeight use double.infinity as width and 40 is the height
+                  minimumSize: Size.fromHeight(40),
                 ),
                 onPressed: () {
                   showDialog(
@@ -113,8 +112,9 @@ class _EditPhonebookState extends State<EditPhonebook> {
                               textStyle: const TextStyle(fontSize: 20),
                             ),
                             onPressed: () {
-                              //search function here
                               setState(() {
+
+                                //Searching to locate the user
                                 var index = -1;
 
                                 for(int i = 0; i < customModels.length; i++){
@@ -122,7 +122,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                     index = i;
                                   }
                                 }
-
+                                //If user was found
                                 if (index != -1) {
                                   Navigator.pop(context);
                                   Navigator.push(
@@ -139,8 +139,6 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                     content: const Text('Could not find user'),
                                   );
 
-                                  // Find the ScaffoldMessenger in the widget tree
-                                  // and use it to show a SnackBar.
                                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                   Navigator.pop(context);
                                 }
@@ -162,7 +160,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size.fromHeight(40), // fromHeight use double.infinity as width and 40 is the height
+                  minimumSize: Size.fromHeight(40),
                 ),
                 onPressed: () {
                   showDialog(
@@ -195,6 +193,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                 textStyle: const TextStyle(fontSize: 20),
                               ),
                               onPressed: () {
+                                //Searching for user
                                 var index = -1;
 
                                 for(int i = 0; i < customModels.length; i++){
@@ -202,7 +201,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                     index = i;
                                   }
                                 }
-
+                                //If user was found
                                 if (index != -1) {
                                   Navigator.pop(context);
 
@@ -223,6 +222,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                                     textStyle: const TextStyle(fontSize: 20),
                                                   ),
                                                   onPressed: () {
+                                                    //Does not want to delete user after all
                                                     deleteUser = false;
                                                     Navigator.pop(context);
                                                   },
@@ -239,6 +239,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
 
                                                     try {
                                                       setState(() {
+                                                        //Find the one to delete, and remove it from api
                                                         for(int i = 0; i < customModels.length; i++){
                                                           if (customModels[i].role == myController.text) {
                                                             DeleteUser(customModels[i]);
@@ -256,8 +257,6 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                                         content: const Text('User was deleted'),
                                                       );
 
-                                                      // Find the ScaffoldMessenger in the widget tree
-                                                      // and use it to show a SnackBar.
                                                       ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                                     }
                                                     Navigator.pop(context);
@@ -274,8 +273,6 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                     content: const Text('Could not find user'),
                                   );
 
-                                  // Find the ScaffoldMessenger in the widget tree
-                                  // and use it to show a SnackBar.
                                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                   Navigator.pop(context);
                                 }

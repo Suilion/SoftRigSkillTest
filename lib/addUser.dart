@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:skill_test/homePage.dart';
-import 'package:skill_test/viewPhonebook.dart';
 import 'constants.dart';
 import 'response.dart';
 
@@ -21,7 +20,6 @@ class _AddUserState extends State<AddUser> {
 
   @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
     myControllerRole.dispose();
     myControllerComment.dispose();
     super.dispose();
@@ -30,14 +28,14 @@ class _AddUserState extends State<AddUser> {
   @override
   Widget build(BuildContext context) {
 
-
+    //need a key to get the results from the form and send them onwards
     final _formKey = GlobalKey<FormState>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add User'),
       ),
       body: Center(
-        // Only allowed to edit name, email, adress and comment
         child: Form(
           key: _formKey,
           child: Column(
@@ -47,7 +45,7 @@ class _AddUserState extends State<AddUser> {
                 controller: myControllerRole,
                 decoration:  InputDecoration(
                   icon: const Icon(Icons.person),
-                  labelText: "Name",
+                  labelText: "Role",
                 ),
               ),
               TextFormField(
@@ -87,9 +85,12 @@ class _AddUserState extends State<AddUser> {
     );
   }
   void AddUser(String role, String comment) async {
-    CustomModel user = CustomModel();
     String token = UserCredentials.Token;
 
+    //Empty user
+    CustomModel user = CustomModel();
+
+    //Make sure that the user wrote something, if not, it will create a user with default everything
     if (comment != null) {
       user.comment = comment;
     }
@@ -98,7 +99,6 @@ class _AddUserState extends State<AddUser> {
     }
     try {
       final response = await http.post(
-
         Uri.parse('https://test-api.softrig.com/api/biz/contacts'),
         headers: {
           HttpHeaders.acceptHeader: 'application/json, text/plain, */*',

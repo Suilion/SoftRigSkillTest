@@ -85,6 +85,7 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                       ),
                                       onPressed: () {
                                         setState(() {
+                                          //Sorting Alphabetically
                                           customModels.sort((a, b) => (a.role ?? '').compareTo(b.role ?? ''));
                                         });
                                         Navigator.pop(context);
@@ -99,6 +100,7 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                       ),
                                       onPressed: () {
                                         setState(() {
+                                          //Sorting based on string length
                                           customModels.sort((a, b) {
                                             int lengthA = a.role?.length ?? 0;
                                             int lengthB = b.role?.length ?? 0;
@@ -107,7 +109,7 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                         });
                                         Navigator.pop(context);
                                       },
-                                      child: const Text('Sort By Role lenght'),
+                                      child: const Text('Sort By Role length'),
                                     ),
                                   ],
                                 );
@@ -181,6 +183,7 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                                       textStyle: const TextStyle(fontSize: 20),
                                                     ),
                                                     onPressed: () {
+                                                      //User does not want to delete from the phonebook
                                                       Navigator.pop(context);
                                                     },
                                                     child: const Text('No'),
@@ -197,6 +200,7 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                                       try {
                                                         setState(() {
                                                           for(int i = 0; i < customModels.length; i++){
+                                                            //Searching locally for the data, and deletes the instance in api
                                                             if (customModels[i].role == customModels[index].role) {
                                                               DeleteUser(customModels[i]);
                                                               userWasDeleted = true;
@@ -209,7 +213,7 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                                       }
 
                                                       if(userWasDeleted) {
-                                                        //delete local instance
+                                                        //Delete local instance
                                                         customModels.removeAt(index);
                                                         const snackBar = SnackBar(
                                                           content: Text('User was deleted'),
