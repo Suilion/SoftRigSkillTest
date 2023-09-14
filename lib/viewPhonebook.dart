@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skill_test/response.dart';
 import 'customer.dart';
 import 'editPhonebook.dart';
 import 'editUser.dart';
@@ -22,12 +23,15 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
   bool hasLoaded = false;
   String apiResponse = 'API data will be shown here';
   String token = UserCredentials.Token;
+  CustomModel defaultModel = CustomModel();
+  List <CustomModel> customModels = [];
 
   @override
   Widget build(BuildContext context) {
     //Fetching data from api
     if(!hasLoaded){
       goApiFetch();
+      print("fetched data");
       if (!apiResponse.contains("Error")){
         setState(() {
           hasLoaded = true;
@@ -86,7 +90,7 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          SortableCustomerList.sort((a, b) => a['Name'].compareTo(b['Name']));
+                                          customModels.sort((a, b) => (a.role ?? '').compareTo(b.role ?? ''));
                                         });
                                         Navigator.pop(context);
                                       },
@@ -100,12 +104,15 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          SortableCustomerList.sort((a, b) => a['Name'].compareTo(b['Name']));
-                                          SortableCustomerList.reversed;
+                                          customModels.sort((a, b) {
+                                            int lengthA = a.role?.length ?? 0;
+                                            int lengthB = b.role?.length ?? 0;
+                                            return lengthB.compareTo(lengthA);
+                                          });
                                         });
                                         Navigator.pop(context);
                                       },
-                                      child: const Text('Sort Reverse Alphabetically'),
+                                      child: const Text('Sort By Role lenght'),
                                     ),
                                   ],
                                 );
@@ -120,145 +127,131 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
             ),
           ),
           if(hasLoaded)
-          SizedBox(
-            height: 400.0,
-            child: ListView.separated(
-              padding: const EdgeInsets.all(18),
-              itemCount:SortableCustomerList.length,
-              itemBuilder: (BuildContext context, int index) {
-                return _buildExpandableTile(SortableCustomerList[index], context);
-              },
-              separatorBuilder: (BuildContext context, int index) => const Divider(),
+            SizedBox(
+              height: 400,
+              child: ListView.builder(
+                itemCount: customModels.length,
+                itemBuilder: (context, index) {
+                  return ExpansionTile(
+                    title: Text('Role ${customModels[index].role}'),
+                    children: <Widget>[
+                      ListTile(
+                        title: Text('Comment: ${customModels[index].comment}'),
+                      ),
+                      Column(
+                        children: <Widget>[
+                          Center(
+                            child: Row(
+                              children: [
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: ColorConstants.DarkBlue,
+                                    padding: const EdgeInsets.all(16.0),
+                                    textStyle: const TextStyle(fontSize: 20),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EditUser(
+                                          user: customModels[index],
+                                        ),
+                                      ),
+                                    );
+
+                                  },
+                                  child: const Text('Edit User'),
+                                ),
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: ColorConstants.AttentionRed,
+                                    padding: const EdgeInsets.all(16.0),
+                                    textStyle: const TextStyle(fontSize: 20),
+                                  ),
+                                  onPressed: () {
+                                    showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            scrollable: true,
+                                            title: Text('Delete User?'),
+                                            content: Text('Are you sure you want to delete  ${customModels[index].role} from the Phonebook?'),
+                                            actions: [
+                                              Row(
+                                                children: [
+                                                  TextButton(
+                                                    style: TextButton.styleFrom(
+                                                      foregroundColor: ColorConstants.DarkBlue,
+                                                      padding: const EdgeInsets.all(16.0),
+                                                      textStyle: const TextStyle(fontSize: 20),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text('No'),
+                                                  ),
+                                                  TextButton(
+                                                    style: TextButton.styleFrom(
+                                                      foregroundColor: ColorConstants.AttentionRed,
+                                                      padding: const EdgeInsets.all(16.0),
+                                                      textStyle: const TextStyle(fontSize: 20),
+                                                    ),
+                                                    onPressed: () {
+                                                      bool DeletedUser = false;
+
+                                                      //NB API Create delete user functionality here
+                                                      try {
+                                                        setState(() {
+
+                                                          //Delete user from local list
+                                                          //NB
+
+                                                          //API Run check if it worked.
+                                                          DeletedUser = true;
+
+                                                          //Display result to the user
+                                                        });
+                                                      } catch (e, s) {
+                                                        print(s);
+                                                      }
+
+                                                      if(DeletedUser) {
+                                                        final snackBar = SnackBar(
+                                                          content: const Text('User was deleted'),
+                                                        );
+
+                                                        // Find the ScaffoldMessenger in the widget tree
+                                                        // and use it to show a SnackBar.
+                                                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                                      }
+
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text('Yes'),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          );
+                                        });
+                                  },
+                                  child: const Text('Delete User'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
-  //This widget is what the list element will look like contracted and expanded
-  Widget _buildExpandableTile(item, context) {
-    return ExpansionTile(
-      title: Text(
-        item['Name'],
-      ),
-      children: <Widget>[
-        ListTile(
-          title: Text(
-            (item['Adress'] + '\n' +  item['Email'] + '\n' +  item['Comment']),
-            style: TextStyle(fontWeight: FontWeight.w700),
-
-          ),
-          subtitle: Column(
-            children: <Widget>[
-              Center(
-                child: Row(
-                  children: [
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        foregroundColor: ColorConstants.DarkBlue,
-                        padding: const EdgeInsets.all(16.0),
-                        textStyle: const TextStyle(fontSize: 20),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditUser(
-                              index: customers.indexOf(item),
-                            ),
-                          ),
-                        );
-                      },
-                      child: const Text('Edit User'),
-                    ),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        foregroundColor: ColorConstants.AttentionRed,
-                        padding: const EdgeInsets.all(16.0),
-                        textStyle: const TextStyle(fontSize: 20),
-                      ),
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                scrollable: true,
-                                title: Text('Delete User?'),
-                                content: Text('Are you sure you want to delete ' + item['Name'] + ' from the Phonebook?'),
-                                actions: [
-                                  Row(
-                                    children: [
-                                      TextButton(
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: ColorConstants.DarkBlue,
-                                          padding: const EdgeInsets.all(16.0),
-                                          textStyle: const TextStyle(fontSize: 20),
-                                        ),
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('No'),
-                                      ),
-                                      TextButton(
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: ColorConstants.AttentionRed,
-                                          padding: const EdgeInsets.all(16.0),
-                                          textStyle: const TextStyle(fontSize: 20),
-                                        ),
-                                        onPressed: () {
-                                          bool DeletedUser = false;
-
-                                          //NB API Create delete user functionality here
-                                          try {
-                                            setState(() {
-
-                                              //Delete user from local list
-                                              final index = customers.indexOf(item);
-                                              customers.removeAt(index);
-
-                                              //API Run check if it worked.
-                                              DeletedUser = true;
-
-                                              //Display result to the user
-                                            });
-                                          } catch (e, s) {
-                                            print(s);
-                                          }
-
-                                          if(DeletedUser) {
-                                            final snackBar = SnackBar(
-                                              content: const Text('User was deleted'),
-                                            );
-
-                                            // Find the ScaffoldMessenger in the widget tree
-                                            // and use it to show a SnackBar.
-                                            ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                                          }
-
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Yes'),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              );
-                            });
-                      },
-                      child: const Text('Delete User'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-
-
-  }
   void goApiFetch() async {
     try {
       final response = await http.get(
@@ -293,11 +286,13 @@ class _ViewPhonebookState extends State<ViewPhonebook> {
         });
 
       } else {
-        // If everything's fine, parse and use the response
-        // Tip: Please read the https://developer.softrig.com/wiki/how-to/contacts
-        final responseJson = jsonDecode(response.body);
         setState(() {
-          apiResponse = responseJson.toString();
+          List responseJson = jsonDecode(response.body);
+          for (int i = 0; i < responseJson.length; i++){
+            defaultModel = CustomModel.fromJson(responseJson[i]);
+            customModels.add(defaultModel);
+          }
+          apiResponse = "Data fetched";
         });
       }
     } catch (error) {

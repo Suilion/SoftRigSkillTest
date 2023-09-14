@@ -45,4 +45,21 @@ class CustomModel {
       infoID: json['InfoID'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'CustomValues': customValues,
+      'Role': role,
+      'Comment': comment,
+      'StatusCode': statusCode,
+      'UpdatedBy': updatedBy,
+      'ID': id,
+      'Deleted': deleted,
+      'UpdatedAt': updatedAt?.toIso8601String(),
+      'CreatedAt': createdAt?.toIso8601String(),
+      'CreatedBy': createdBy,
+      'ParentBusinessRelationID': parentBusinessRelationID,
+      'InfoID': infoID,
+    };
+  }
 }

@@ -1,21 +1,30 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter/material.dart';
-import 'customer.dart';
+import 'package:skill_test/response.dart';
 import 'constants.dart';
+import 'viewPhonebook.dart';
 
 class EditUser extends StatefulWidget {
-  final int index;
-  const EditUser({Key? key, required this.index}) : super(key: key);
+  final CustomModel user;
+  const EditUser({Key? key, required this.user}) : super(key: key);
 
   @override
   State<EditUser> createState() => _EditUserState();
 }
 
 class _EditUserState extends State<EditUser> {
-  final myController = TextEditingController();
+  final myControllerRole = TextEditingController();
+  final myControllerComment = TextEditingController();
+
+
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-    myController.dispose();
+    myControllerRole.dispose();
+    myControllerComment.dispose();
     super.dispose();
   }
 
@@ -29,35 +38,24 @@ class _EditUserState extends State<EditUser> {
         title: const Text('Edit User'),
       ),
       body: Center(
-        // Only allowed to edit name, email, adress and comment
+        // Only allowed to edit role and comment.
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               TextFormField(
-                  controller: myController,
+                  controller: myControllerRole,
                   decoration:  InputDecoration(
                   icon: const Icon(Icons.person),
-                  labelText: customers[widget.index]['Name'],
+                  labelText: widget.user.role,
                 ),
               ),
               TextFormField(
-                decoration: InputDecoration(
-                  icon: const Icon(Icons.house),
-                  labelText: customers[widget.index]['Adress'],
-                ),
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  icon: const Icon(Icons.mail),
-                  labelText: customers[widget.index]['Email'],
-                ),
-              ),
-              TextFormField(
+                controller: myControllerComment,
                 decoration: InputDecoration(
                   icon: const Icon(Icons.comment),
-                  labelText: customers[widget.index]['Comment'],
+                  labelText: widget.user.comment,
                 ),
               ),
               Center(
@@ -70,9 +68,13 @@ class _EditUserState extends State<EditUser> {
                       textStyle: const TextStyle(fontSize: 20),
                     ),
                     onPressed: () {
-                      print(myController.text);
-                      //Update variables to the user
-                      Navigator.pop(context);
+                      setState(() {
+                        updateUser(widget.user, myControllerRole.text, myControllerComment.text);
+                      });
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ViewPhonebook()),
+                      );
                     },
                     child: const Text('Submit Changes'),
                   ),
@@ -85,4 +87,40 @@ class _EditUserState extends State<EditUser> {
       ),
     );
   }
+}
+
+void updateUser(CustomModel user, String role, String comment) async {
+  String token = UserCredentials.Token;
+  int? userId = user.id;
+  if(comment != null){
+    user.comment = comment;
+  }
+  if(role != null){
+    user.role = role;
+  }
+  try{
+    final response = await http.put(
+
+      Uri.parse('https://test-api.softrig.com/api/biz/contacts/$userId'),
+      headers: {
+        HttpHeaders.acceptHeader: 'application/json, text/plain, */*',
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+        "CompanyKey": UserCredentials.companyKey,
+        HttpHeaders.accessControlAllowOriginHeader: '*',
+      },
+      body: jsonEncode(user.toJson()), // Convert CustomModel to JSON
+    );
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to update album.');
+    }
+  } catch (e){
+    throw();
+  }
+
 }

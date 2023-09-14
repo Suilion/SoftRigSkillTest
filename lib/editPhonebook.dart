@@ -99,7 +99,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                     index = i;
                                   }
                                 }
-
+/*
                                 if (index != -1) {
                                   Navigator.pop(context);
                                   Navigator.push(
@@ -120,7 +120,7 @@ class _EditPhonebookState extends State<EditPhonebook> {
                                   // and use it to show a SnackBar.
                                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                   Navigator.pop(context);
-                                }
+                                }*/
                               });
                             },
                             child: const Text('Search'),
